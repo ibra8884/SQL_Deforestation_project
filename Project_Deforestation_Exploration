@@ -96,71 +96,68 @@ LIMIT  1;
 
 -- REGIONAL OUTLOOK
 -- Create a table that shows the Regions and their percent forest area (sum of forest area divided by sum of land area) in 1990 and 2016.
-
-WITH t1990
-AS
-  (
-           SELECT   region,
-                    year,
-                    round((sum(forest_area_sqkm)::NUMERIC/sum(total_area_sqkm)::NUMERIC*100)::NUMERIC, 2) AS percent_forest
-           FROM     forestation
-           WHERE    year = 1990
-           GROUP BY 1,
-                    2),
-  t2016
-AS
-  (
-           SELECT   region,
-                    year,
-                    round((sum(forest_area_sqkm)::NUMERIC/sum(total_area_sqkm)::NUMERIC*100)::NUMERIC, 2) AS percent_forest
-           FROM     forestation
-           WHERE    year = 2016
-           GROUP BY 1,
-                    2)
-
 -- Based on the table you created, ....
 -- 1. What was the percent forest of the entire world in 2016? Which region had the HIGHEST percent forest in 2016, and which had the LOWEST, to 2 decimal places?
-
-SELECT *
-FROM   t2016
-WHERE  region = 'World';
-
-SELECT region,
-       year,
-       percent_forest
-FROM   t2016
-ORDER  BY 3 DESC
-LIMIT  1; 
-
-SELECT region,
-       year,
-       percent_forest
-FROM   t2016
-ORDER  BY 3 ASC
-LIMIT  1;
-
 -- 2. What was the percent forest of the entire world in 1990? Which region had the HIGHEST percent forest in 1990, and which had the LOWEST, to 2 decimal places?
 
-SELECT *
-FROM   t1990
-WHERE  region = 'World';
-
+WITH t1990
+     AS (SELECT region,
+                year,
+                Round(( SUM(forest_area_sqkm) :: NUMERIC / SUM(total_area_sqkm)
+                        ::
+                        NUMERIC * 100
+                      ) ::
+                      NUMERIC, 2) AS percent_forest
+         FROM   forestation
+         WHERE  year = 1990
+         GROUP  BY 1,
+                   2),
+     t2016
+     AS (SELECT region,
+                year,
+                Round(( SUM(forest_area_sqkm) :: NUMERIC / SUM(total_area_sqkm)
+                        ::
+                        NUMERIC * 100
+                      ) ::
+                      NUMERIC, 2) AS percent_forest
+         FROM   forestation
+         WHERE  year = 2016
+         GROUP  BY 1,
+                   2)
 SELECT region,
-       year,
-       percent_forest
+       Sum(t1990.percent_forest) AS "1990_forest_prc",
+       Sum(t2016.percent_forest) AS "2016_forest_prc"
 FROM   t1990
-ORDER  BY 3 DESC
-LIMIT  1; 
-
-SELECT region,
-       year,
-       percent_forest
-FROM   t1990
-ORDER  BY 3 ASC
-LIMIT  1; 
+       join t2016 USING (region)
+GROUP  BY 1
+ORDER  BY 2 DESC, 3 DESC;
 
 -- 3. Based on the table you created, which regions of the world DECREASED in forest area from 1990 to 2016?
 
+WITH t1990
+     AS (SELECT region,
+                year,
+                Round(( SUM(forest_area_sqkm) :: NUMERIC / SUM(total_area_sqkm)
+                        ::
+                        NUMERIC * 100
+                      ) ::
+                      NUMERIC, 2) AS percent_forest
+         FROM   forestation
+         WHERE  year = 1990
+         GROUP  BY 1,
+                   2),
+     t2016
+     AS (SELECT region,
+                year,
+                Round(( SUM(forest_area_sqkm) :: NUMERIC / SUM(total_area_sqkm)
+                        ::
+                        NUMERIC * 100
+                      ) ::
+                      NUMERIC, 2) AS percent_forest
+         FROM   forestation
+         WHERE  year = 2016
+         GROUP  BY 1,
+                   2)
 SELECT t2016.region,
        t1990.percent_forest "1990_forest",
        t2016.percent_forest "2016_forest"
